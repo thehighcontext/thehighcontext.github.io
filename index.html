@@ -33,14 +33,13 @@
             margin: auto 0;
         }
 
-        /* Typography */
-        h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            letter-spacing: -0.03em;
-            color: #ffffff;
-            margin-bottom: 0.75rem;
-            text-transform: uppercase;
+        /* Typography & Logo */
+        .site-logo {
+            max-width: 100%;
+            height: auto;
+            max-height: 80px; /* Adjust this value based on your logo's proportions */
+            margin-bottom: 1rem;
+            object-fit: contain;
         }
 
         p.motto {
@@ -87,8 +86,8 @@
 
         /* Responsiveness */
         @media (min-width: 600px) {
-            h1 {
-                font-size: 3.2rem;
+            .site-logo {
+                max-height: 120px; /* Scales up slightly on larger screens */
             }
             p.motto {
                 font-size: 1.25rem;
@@ -100,7 +99,7 @@
 
     <main>
         <header>
-            <h1>TheHighContext</h1>
+            <img src="/logo.png" alt="TheHighContext Logo" class="site-logo">
             <p class="motto">"Holding men to higher standards."</p>
         </header>
 
@@ -114,7 +113,7 @@
     </main>
 
     <footer>
-        &copy; TheHighContext. All rights reserved.
+        &copy; 2026 TheHighContext. All rights reserved.
     </footer>
 
 </body>
