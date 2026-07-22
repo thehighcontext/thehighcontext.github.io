@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Axis Graph</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/reactflow@11.11.4/dist/style.css" />
+  <script src="https://unpkg.com/react@18.2.0/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/reactflow@11.11.4/dist/umd/index.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #080b08;
+      --surface:   #0c100c;
+      --surface2:  #111811;
+      --surface3:  #182018;
+      --border:    #1e2b1e;
+      --border2:   #263326;
+      --accent:    #22c55e;
+      --accent-h:  #16a34a;
+      --accent-g:  rgba(34,197,94,0.12);
+      --accent2:   #94a3b8;
+      --accent2-h: #cbd5e1;
+      --text:      #e8f0e8;
+      --muted:     #4a6b4a;
+      --muted2:    #6a906a;
+      --danger:    #f87171;
+      --success:   #22c55e;
+      --font:      'DM Sans', sans-serif;
+    }
+
+    html, body, #root { height: 100%; width: 100%; overflow: hidden; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); }
+
+    /* ── BOOT SCREEN ─────────────────────────────────────────── */
+    #boot {
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999;
+      font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+      color: var(--muted2);
+    }
+    #boot.hidden { opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+
+    /* ── APP LAYOUT ──────────────────────────────────────────── */
+    .app { display: flex; flex-direction: column; height: 100vh; width: 100vw; }
+
+    /* ── TOOLBAR ─────────────────────────────────────────────── */
+    .toolbar {
+      height: 56px; min-height: 56px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 18px; gap: 14px; z-index: 200;
+      box-shadow: 0 2px 24px rgba(0,0,0,0.5);
+    }
+    .tb-left  { display: flex; align-items: center; gap: 16px; min-width: 0; flex: 1; overflow: hidden; }
+    .tb-right { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+
+    .brand {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 700; letter-spacing: -0.2px;
+      color: var(--text); white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* breadcrumb */
+    .breadcrumb { display: flex; align-items: center; gap: 2px; min-width: 0; overflow: hidden; }
+    .bc-div { color: var(--border2); font-size: 16px; padding: 0 2px; flex-shrink: 0; }
+    .bc-link {
+      background: none; border: none; cursor: pointer; font-family: var(--font);
+      font-size: 13px; color: var(--muted2); padding: 3px 8px; border-radius: 5px;
+      transition: color 0.15s, background 0.15s; white-space: nowrap; flex-shrink: 0;
+    }
+    .bc-link:hover { color: var(--text); background: var(--surface3); }
+    .bc-curr {
+      font-size: 13px; font-weight: 600; color: var(--text);
+      cursor: pointer; padding: 3px 8px; border-radius: 5px;
+      transition: background 0.15s;
+      max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .bc-curr:hover { background: var(--surface3); }
+    .bc-edit-input {
+      background: var(--surface3); border: 1.5px solid var(--accent);
+      color: var(--text); font-family: var(--font); font-size: 13px; font-weight: 600;
+      padding: 2px 8px; border-radius: 5px; outline: none;
+      min-width: 80px; max-width: 200px;
+    }
+
+    /* ── BUTTONS ─────────────────────────────────────────────── */
+    .btn {
+      font-family: var(--font); font-size: 13px; font-weight: 500;
+      padding: 7px 13px; border-radius: 7px; border: none; cursor: pointer;
+      transition: all 0.15s; letter-spacing: 0; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .btn.ghost {
+      background: var(--surface3); color: var(--muted2);
+      border: 1px solid var(--border2);
+    }
+    .btn.ghost:hover { border-color: var(--muted); color: var(--text); }
+    .btn.primary { background: var(--accent); color: #04110a; }
+    .btn.primary:hover { background: var(--accent-h); }
+    .btn.primary:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+    .btn.saved { background: transparent; color: var(--success); border: 1px solid var(--success); }
+    .btn.danger { background: rgba(248,113,113,0.1); color: var(--danger); border: 1px solid rgba(248,113,113,0.25); }
+    .btn.danger:hover { background: rgba(248,113,113,0.2); }
+
+    /* ── CANVAS ──────────────────────────────────────────────── */
+    .canvas-wrap { flex: 1; position: relative; overflow: hidden; }
+
+    /* RF overrides */
+    .react-flow__renderer  { background: var(--bg) !important; }
+    .react-flow__background { background: var(--bg) !important; }
+    .react-flow__node {
+      padding: 0 !important; border-radius: 0 !important;
+      border: none !important; background: transparent !important;
+      box-shadow: none !important;
+    }
+    .react-flow__handle {
+      width: 9px !important; height: 9px !important;
+      background: var(--surface3) !important;
+      border: 1.5px solid var(--muted) !important;
+      transition: all 0.15s !important;
+    }
+    .react-flow__handle:hover {
+      background: var(--accent) !important;
+      border-color: var(--accent) !important;
+    }
+    .react-flow__handle-top    { top: -5px !important; }
+    .react-flow__handle-bottom { bottom: -5px !important; }
+    .react-flow__controls {
+      background: var(--surface2) !important; border: 1px solid var(--border) !important;
+      border-radius: 8px !important; overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+    }
+    .react-flow__controls-button {
+      background: var(--surface2) !important; border-bottom-color: var(--border) !important;
+      fill: var(--muted2) !important;
+    }
+    .react-flow__controls-button:hover { background: var(--surface3) !important; fill: var(--text) !important; }
+    .react-flow__minimap {
+      background: var(--surface2) !important; border: 1px solid var(--border) !important;
+      border-radius: 8px !important; overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+    }
+    .react-flow__edge-path { transition: opacity 0.15s; }
+
+    /* ── NODES ───────────────────────────────────────────────── */
+    .n-wrap {
+      position: relative;
+      padding: 11px 13px 11px 13px;
+      width: 222px;
+      border-radius: 7px;
+      font-family: var(--font);
+      transition: box-shadow 0.18s, border-color 0.18s;
+      user-select: none; cursor: default;
+    }
+
+    /* Concept — bright green stripe */
+    .n-wrap.type-concept {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-left: 3px solid #22c55e;
+    }
+    .n-wrap.type-concept:hover {
+      border-color: #253525;
+      box-shadow: 0 0 0 2px rgba(34,197,94,0.15), 0 6px 22px rgba(0,0,0,0.45);
+    }
+    .n-wrap.type-concept.n-sel {
+      border-color: #22c55e;
+      box-shadow: 0 0 0 2.5px rgba(34,197,94,0.3), 0 8px 28px rgba(0,0,0,0.5);
+    }
+
+    /* Subgraph — same shape, deeper forest green, thicker border */
+    .n-wrap.type-subgraph {
+      background: #0c1a0c;
+      border: 2px solid #1a301a;
+      border-left: 4px solid #166534;
+    }
+    .n-wrap.type-subgraph:hover {
+      border-color: #244d24;
+      box-shadow: 0 0 0 2px rgba(22,101,52,0.3), 0 6px 22px rgba(0,0,0,0.5);
+    }
+    .n-wrap.type-subgraph.n-sel {
+      border-color: #166534;
+      box-shadow: 0 0 0 2.5px rgba(22,101,52,0.4), 0 8px 28px rgba(0,0,0,0.5);
+    }
+
+    /* Node content */
+    .n-lbl {
+      font-size: 13px; font-weight: 600;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      text-align: center;
+    }
+    .n-prev {
+      font-size: 11.5px; color: var(--muted2); line-height: 1.5;
+      margin-top: 5px;
+      overflow: hidden; display: -webkit-box;
+      -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+
+    /* Actions float outside below the card */
+    .n-acts {
+      position: absolute;
+      top: calc(100% + 7px);
+      left: 50%; transform: translateX(-50%);
+      display: flex; gap: 4px; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.15s;
+      white-space: nowrap; z-index: 10;
+    }
+    .n-wrap:hover .n-acts { opacity: 1; }
+
+    .nab {
+      font-size: 11.5px; padding: 3px 8px; border-radius: 5px; border: none;
+      background: var(--surface3); color: var(--muted2); cursor: pointer;
+      font-family: var(--font); font-weight: 500; transition: all 0.12s; line-height: 1.4;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+    .nab:hover { background: var(--border2); color: var(--text); }
+    .nab.x:hover { background: rgba(248,113,113,0.15); color: var(--danger); }
+    .nab.go {
+      color: #22c55e; background: rgba(34,197,94,0.08);
+      border: 1px solid rgba(34,197,94,0.2);
+    }
+    .nab.go:hover { background: rgba(34,197,94,0.15); border-color: #22c55e; }
+
+    /* ── OVERLAY + MODAL ─────────────────────────────────────── */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(2,6,2,0.88);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; backdrop-filter: blur(8px);
+      animation: oFade 0.14s ease;
+    }
+    @keyframes oFade { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 14px; width: 480px; max-width: 96vw; max-height: 88vh;
+      overflow: hidden; display: flex; flex-direction: column;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.75), 0 0 0 1px rgba(34,197,94,0.06);
+      animation: mUp 0.2s cubic-bezier(0.33,1,0.68,1);
+    }
+    .modal.wide { width: 660px; }
+    @keyframes mUp { from { transform: translateY(14px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .m-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px 15px; border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .m-title { font-size: 15px; font-weight: 600; }
+    .m-close {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      font-size: 14px; width: 28px; height: 28px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.12s; font-family: var(--font);
+    }
+    .m-close:hover { background: var(--surface3); color: var(--text); }
+
+    .m-body {
+      padding: 20px; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 15px; flex: 1;
+    }
+    .m-foot { display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* ── FORMS ───────────────────────────────────────────────── */
+    .f-grp  { display: flex; flex-direction: column; gap: 7px; }
+    .f-lbl  {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.6px; color: var(--muted2);
+    }
+    .f-hint { font-weight: 400; text-transform: none; letter-spacing: 0; opacity: 0.7; }
+    .f-inp {
+      background: var(--surface3); border: 1px solid var(--border2);
+      border-radius: 8px; color: var(--text); font-family: var(--font);
+      font-size: 14px; padding: 10px 12px; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s; resize: none; width: 100%;
+    }
+    .f-inp:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(34,197,94,0.1);
+    }
+    .f-ta { resize: vertical; line-height: 1.65; }
+    .f-error { font-size: 12px; color: var(--danger); padding: 8px 12px; border-radius: 7px; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); }
+
+    /* type toggle */
+    .type-row { flex-direction: row !important; gap: 10px !important; }
+    .type-btn {
+      flex: 1; padding: 11px; border-radius: 9px; cursor: pointer;
+      background: var(--surface3); border: 1px solid var(--border2);
+      color: var(--muted2); font-family: var(--font); font-size: 13px; font-weight: 500;
+      transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 7px;
+    }
+    .type-btn:hover { border-color: var(--muted); color: var(--text); }
+    .type-btn.on.concept  {
+      background: rgba(34,197,94,0.1); border-color: var(--accent);
+      color: var(--accent); box-shadow: 0 0 0 3px rgba(34,197,94,0.08);
+    }
+    .type-btn.on.subgraph {
+      background: rgba(22,101,52,0.12); border-color: #166534;
+      color: #4ade80; box-shadow: 0 0 0 3px rgba(22,101,52,0.1);
+    }
+
+    /* view modal content */
+    .view-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px;
+      color: var(--muted2); padding: 4px 11px; border-radius: 100px;
+      background: var(--surface3); border: 1px solid var(--border2);
+    }
+    .view-body { font-size: 14px; line-height: 1.75; color: var(--text); white-space: pre-wrap; }
+    .view-empty { font-size: 14px; color: var(--muted); font-style: italic; }
+
+    /* export */
+    .export-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .export-pre {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 16px; font-size: 12px; line-height: 1.75;
+      color: var(--muted2); overflow: auto; white-space: pre;
+      font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
+      max-height: 52vh; flex: 1; tab-size: 2;
+    }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+  </style>
+</head>
+
+<body>
+  <div id="boot"><span>Axis Graph</span></div>
+  <div id="root"></div>
+
+<script type="text/babel">
+const {
+  useState, useEffect, useRef, useCallback, useMemo,
+  createContext, useContext, forwardRef, useImperativeHandle
+} = React;
+
+const {
+  ReactFlow, ReactFlowProvider,
+  useNodesState, useEdgesState, useReactFlow,
+  Handle, Position, MiniMap, Controls, Background,
+  addEdge, MarkerType,
+} = window.ReactFlow;
+
+const STORAGE_KEY = 'philomap_v2';
+
+const EDGE_DEF = {
+  style:     { stroke: '#22c55e', strokeWidth: 1.5, opacity: 0.65 },
+  markerEnd: { type: MarkerType.ArrowClosed, color: '#22c55e', width: 17, height: 17 },
+};
+
+// ─── Utility ──────────────────────────────────────────────────────────────────
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+const mkGraph = (id, name, desc = '', parentId = null) =>
+  ({ id, name, description: desc, parentId, nodes: [], edges: [] });
+
+const mkNode = (type, label, desc = '', graphId = null) => ({
+  id: uid(), type,
+  position: {
+    x: 260 + (Math.random() - 0.5) * 300,
+    y: 200 + (Math.random() - 0.5) * 200,
+  },
+  data: { label, description: desc, graphId },
+});
+
+const cleanNode = n => ({
+  id: n.id, type: n.type || 'concept',
+  position: { x: Math.round(n.position?.x ?? 0), y: Math.round(n.position?.y ?? 0) },
+  data: {
+    label:       n.data?.label       || '',
+    description: n.data?.description || '',
+    graphId:     n.data?.graphId     || null,
+  },
+});
+
+const cleanEdge = e => ({ id: e.id, source: e.source, target: e.target });
+
+const applyEdgeDef = edges =>
+  (edges || []).map(e => ({ ...EDGE_DEF, ...e, style: EDGE_DEF.style, markerEnd: EDGE_DEF.markerEnd }));
+
+// ─── Persistence ──────────────────────────────────────────────────────────────
+const loadStore = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (d?.graphs?.root) return d;
+    }
+  } catch (_) {}
+  return { graphs: { root: mkGraph('root', 'My Podcast', 'Philosophical map for this episode') } };
+};
+
+const persist = store => {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); } catch (_) {}
+};
+
+// ─── Markdown export ───────────────────────────────────────────────────────────
+const topoSort = (nodes, edges) => {
+  if (!nodes?.length) return [];
+  const inDeg = {}, adj = {};
+  nodes.forEach(n => { inDeg[n.id] = 0; adj[n.id] = []; });
+  (edges || []).forEach(e => {
+    if (adj[e.source] !== undefined) adj[e.source].push(e.target);
+    if (inDeg[e.target]  !== undefined) inDeg[e.target]++;
+  });
+  const q = nodes.filter(n => !inDeg[n.id]).map(n => n.id);
+  const out = [];
+  while (q.length) {
+    const id = q.shift(); out.push(id);
+    (adj[id] || []).forEach(t => { if (!--inDeg[t]) q.push(t); });
+  }
+  nodes.forEach(n => { if (!out.includes(n.id)) out.push(n.id); });
+  return out.map(id => nodes.find(n => n.id === id)).filter(Boolean);
+};
+
+const renderGraph = (store, gid, depth = 1) => {
+  const g = store.graphs[gid];
+  if (!g) return '';
+  const H = d => '#'.repeat(Math.min(d, 6));
+  let md = `${H(depth)} ${g.name}\n\n`;
+  if (g.description) md += `${g.description}\n\n`;
+  topoSort(g.nodes, g.edges).forEach(node => {
+    md += `${H(depth + 1)} ${node.data.label}\n\n`;
+    if (node.data.description) md += `${node.data.description}\n\n`;
+    const outs = (g.edges || []).filter(e => e.source === node.id);
+    if (outs.length) {
+      const targets = outs
+        .map(e => g.nodes.find(n => n.id === e.target)?.data.label)
+        .filter(Boolean);
+      if (targets.length) md += `Leads to: ${targets.join(', ')}\n\n`;
+    }
+    if (node.type === 'subgraph' && node.data.graphId)
+      md += renderGraph(store, node.data.graphId, depth + 2);
+    md += `---\n\n`;
+  });
+  return md;
+};
+
+// ─── Context ───────────────────────────────────────────────────────────────────
+const NCCtx = createContext({ onView() {}, onEdit() {}, onDel() {}, onExplore() {} });
+
+// ─── Node components ───────────────────────────────────────────────────────────
+function ConceptNode({ id, data, selected }) {
+  const { onView, onEdit, onDel } = useContext(NCCtx);
+  return (
+    <div className={`n-wrap type-concept${selected ? ' n-sel' : ''}`}>
+      <Handle type="target" position={Position.Top} />
+      <div className="n-lbl" title={data.label}>{data.label}</div>
+      {data.description && <div className="n-prev">{data.description}</div>}
+      <div className="n-acts">
+        <button className="nab" onClick={() => onView(id)}>View</button>
+        <button className="nab" onClick={() => onEdit(id)}>Edit</button>
+        <button className="nab x" onClick={() => onDel(id)}>✕</button>
+      </div>
+      <Handle type="source" position={Position.Bottom} />
+    </div>
+  );
+}
+
+function SubgraphNode({ id, data, selected }) {
+  const { onView, onEdit, onDel, onExplore } = useContext(NCCtx);
+  return (
+    <div className={`n-wrap type-subgraph${selected ? ' n-sel' : ''}`}>
+      <Handle type="target" position={Position.Top} />
+      <div className="n-lbl" title={data.label}>{data.label}</div>
+      {data.description && <div className="n-prev">{data.description}</div>}
+      <div className="n-acts">
+        <button className="nab go" onClick={() => onExplore(id)}>Explore →</button>
+        <button className="nab" onClick={() => onView(id)}>View</button>
+        <button className="nab" onClick={() => onEdit(id)}>Edit</button>
+        <button className="nab x" onClick={() => onDel(id)}>✕</button>
+      </div>
+      <Handle type="source" position={Position.Bottom} />
+    </div>
+  );
+}
+
+const NODE_TYPES = { concept: ConceptNode, subgraph: SubgraphNode };
+
+// ─── FlowInner ─────────────────────────────────────────────────────────────────
+const FlowInner = forwardRef(function FlowInner({ initNodes, initEdges }, ref) {
+  const [nodes, setNodes, onNodesChange] = useNodesState(initNodes || []);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(applyEdgeDef(initEdges));
+  const nodesRef = useRef(nodes);
+  const edgesRef = useRef(edges);
+  useEffect(() => { nodesRef.current = nodes; }, [nodes]);
+  useEffect(() => { edgesRef.current = edges; }, [edges]);
+
+  const { fitView } = useReactFlow();
+
+  useEffect(() => {
+    if (!initNodes?.length) return;
+    const t = setTimeout(() =>
+      fitView({ padding: 0.35, maxZoom: 0.82, duration: 450 }), 100
+    );
+    return () => clearTimeout(t);
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    getState: () => ({
+      nodes: nodesRef.current.map(cleanNode),
+      edges: edgesRef.current.map(cleanEdge),
+    }),
+    getNode:    id => nodesRef.current.find(n => n.id === id),
+    addNode:    node => setNodes(ns => [...ns, node]),
+    updateNode: (id, patch) =>
+      setNodes(ns => ns.map(n => n.id === id ? { ...n, data: { ...n.data, ...patch } } : n)),
+    removeNode: id => {
+      setNodes(ns => ns.filter(n => n.id !== id));
+      setEdges(es => es.filter(e => e.source !== id && e.target !== id));
+    },
+    nodeCount: () => nodesRef.current.length,
+  }));
+
+  const onConnect = useCallback(
+    params => setEdges(es => addEdge({ ...params, ...EDGE_DEF }, es)),
+    [setEdges]
+  );
+
+  return (
+    <ReactFlow
+      nodes={nodes} edges={edges}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
+      onConnect={onConnect}
+      nodeTypes={NODE_TYPES}
+      deleteKeyCode={null}
+      fitView={false}
+      defaultViewport={{ x: 0, y: 0, zoom: 0.72 }}
+      minZoom={0.15} maxZoom={2.5}
+      proOptions={{ hideAttribution: true }}
+    >
+      <Background color="#142014" variant="dots" gap={22} size={1.3} />
+      <Controls showInteractive={false} />
+      <MiniMap
+        nodeColor={n => n.type === 'subgraph' ? '#4ade80' : '#22c55e'}
+        maskColor="rgba(4,8,4,0.78)"
+      />
+    </ReactFlow>
+  );
+});
+
+const FlowCanvas = forwardRef(function FlowCanvas(props, ref) {
+  return (
+    <ReactFlowProvider>
+      <FlowInner ref={ref} {...props} />
+    </ReactFlowProvider>
+  );
+});
+
+// ─── Modals ────────────────────────────────────────────────────────────────────
+function Overlay({ onClose, wide, children }) {
+  useEffect(() => {
+    const h = e => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [onClose]);
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className={`modal${wide ? ' wide' : ''}`} onClick={e => e.stopPropagation()}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function AddModal({ initType = 'concept', onAdd, onClose }) {
+  const [type,  setType]  = useState(initType);
+  const [label, setLabel] = useState('');
+  const [desc,  setDesc]  = useState('');
+  const inputRef = useRef(null);
+  useEffect(() => { inputRef.current?.focus(); }, []);
+
+  const submit = () => {
+    if (!label.trim()) return;
+    onAdd({ type, label: label.trim(), description: desc.trim() });
+  };
+
+  return (
+    <Overlay onClose={onClose}>
+      <div className="m-head">
+        <span className="m-title">Add Node</span>
+        <button className="m-close" onClick={onClose}>✕</button>
+      </div>
+      <div className="m-body">
+        <div className="f-grp type-row">
+          <button
+            className={`type-btn concept${type === 'concept' ? ' on' : ''}`}
+            onClick={() => setType('concept')}
+          >Node</button>
+          <button
+            className={`type-btn subgraph${type === 'subgraph' ? ' on' : ''}`}
+            onClick={() => setType('subgraph')}
+          >Subgraph</button>
+        </div>
+        <div className="f-grp">
+          <label className="f-lbl">Name</label>
+          <input
+            ref={inputRef}
+            className="f-inp"
+            value={label}
+            onChange={e => setLabel(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && submit()}
+            placeholder={type === 'concept' ? 'e.g. Free Will' : 'e.g. Ethics Deep-Dive'}
+          />
+        </div>
+        <div className="f-grp">
+          <label className="f-lbl">Description <span className="f-hint">(optional)</span></label>
+          <textarea
+            className="f-inp f-ta"
+            value={desc}
+            onChange={e => setDesc(e.target.value)}
+            placeholder="What is this about? What's the core argument?"
+            rows={4}
+          />
+        </div>
+      </div>
+      <div className="m-foot" style={{ padding: '0 20px 18px' }}>
+        <button className="btn ghost" onClick={onClose}>Cancel</button>
+        <button className="btn primary" onClick={submit} disabled={!label.trim()}>Add Node</button>
+      </div>
+    </Overlay>
+  );
+}
+
+function EditModal({ node, onSave, onClose }) {
+  const [label, setLabel] = useState(node.data?.label || '');
+  const [desc,  setDesc]  = useState(node.data?.description || '');
+  const submit = () => {
+    if (!label.trim()) return;
+    onSave(node.id, { label: label.trim(), description: desc.trim() });
+    onClose();
+  };
+  return (
+    <Overlay onClose={onClose}>
+      <div className="m-head">
+        <span className="m-title">Edit Node</span>
+        <button className="m-close" onClick={onClose}>✕</button>
+      </div>
+      <div className="m-body">
+        <div className="f-grp">
+          <label className="f-lbl">Name</label>
+          <input
+            className="f-inp" value={label}
+            onChange={e => setLabel(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && submit()}
+            autoFocus
+          />
+        </div>
+        <div className="f-grp">
+          <label className="f-lbl">Description</label>
+          <textarea className="f-inp f-ta" value={desc}
+            onChange={e => setDesc(e.target.value)} rows={7} />
+        </div>
+      </div>
+      <div className="m-foot" style={{ padding: '0 20px 18px' }}>
+        <button className="btn ghost" onClick={onClose}>Cancel</button>
+        <button className="btn primary" onClick={submit} disabled={!label.trim()}>Save Changes</button>
+      </div>
+    </Overlay>
+  );
+}
+
+function ViewModal({ node, onClose }) {
+  const typeLabel = node.type === 'subgraph' ? 'Subgraph' : 'Node';
+  return (
+    <Overlay onClose={onClose}>
+      <div className="m-head">
+        <span className="m-title">{node.data?.label}</span>
+        <button className="m-close" onClick={onClose}>✕</button>
+      </div>
+      <div className="m-body">
+        <span className="view-badge">{typeLabel}</span>
+        {node.data?.description
+          ? <div className="view-body">{node.data.description}</div>
+          : <div className="view-empty">No description yet.</div>
+        }
+      </div>
+    </Overlay>
+  );
+}
+
+function ExportModal({ markdown, onClose }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () =>
+    navigator.clipboard.writeText(markdown).then(() => {
+      setCopied(true); setTimeout(() => setCopied(false), 2000);
+    });
+  const download = () => {
+    const url = URL.createObjectURL(new Blob([markdown], { type: 'text/markdown;charset=utf-8' }));
+    Object.assign(document.createElement('a'), { href: url, download: 'axis-graph.md' }).click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+  return (
+    <Overlay onClose={onClose} wide>
+      <div className="m-head">
+        <span className="m-title">Export</span>
+        <button className="m-close" onClick={onClose}>✕</button>
+      </div>
+      <div className="m-body">
+        <div className="export-actions">
+          <button className="btn ghost" onClick={copy}>{copied ? '✓ Copied' : 'Copy'}</button>
+          <button className="btn primary" onClick={download}>Download .md</button>
+        </div>
+        <pre className="export-pre">{markdown}</pre>
+      </div>
+    </Overlay>
+  );
+}
+
+function LoadModal({ onLoad, onClose }) {
+  const [text,  setText]  = useState('');
+  const [error, setError] = useState('');
+  const submit = () => {
+    try {
+      const data = JSON.parse(text.trim());
+      if (!data?.graphs?.root) throw new Error('missing root');
+      onLoad(data);
+      onClose();
+    } catch (_) {
+      setError('Invalid JSON — paste the full contents of an axis-graph.json file.');
+    }
+  };
+  return (
+    <Overlay onClose={onClose}>
+      <div className="m-head">
+        <span className="m-title">Load Graph</span>
+        <button className="m-close" onClick={onClose}>✕</button>
+      </div>
+      <div className="m-body">
+        <div className="f-grp">
+          <label className="f-lbl">Paste JSON</label>
+          <textarea
+            className="f-inp f-ta"
+            value={text}
+            onChange={e => { setText(e.target.value); setError(''); }}
+            placeholder='Paste the contents of your axis-graph.json here…'
+            rows={10}
+            autoFocus
+          />
+        </div>
+        {error && <div className="f-error">{error}</div>}
+      </div>
+      <div className="m-foot" style={{ padding: '0 20px 18px' }}>
+        <button className="btn ghost" onClick={onClose}>Cancel</button>
+        <button className="btn primary" onClick={submit} disabled={!text.trim()}>Load</button>
+      </div>
+    </Overlay>
+  );
+}
+
+function ConfirmModal({ onConfirm, onClose }) {
+  return (
+    <Overlay onClose={onClose}>
+      <div className="m-head">
+        <span className="m-title">Clear Graph</span>
+        <button className="m-close" onClick={onClose}>✕</button>
+      </div>
+      <div className="m-body">
+        <p style={{ fontSize: 14, lineHeight: 1.65, color: 'var(--text)' }}>
+          This will delete all nodes, subgraphs, and connections. This cannot be undone.
+        </p>
+      </div>
+      <div className="m-foot" style={{ padding: '0 20px 18px' }}>
+        <button className="btn ghost" onClick={onClose}>Cancel</button>
+        <button className="btn danger" onClick={() => { onConfirm(); onClose(); }}>Clear everything</button>
+      </div>
+    </Overlay>
+  );
+}
+
+// ─── Breadcrumb inline rename ──────────────────────────────────────────────────
+function BcEdit({ name, onChange }) {
+  const [on,  setOn]  = useState(false);
+  const [val, setVal] = useState(name);
+  useEffect(() => setVal(name), [name]);
+  const commit = () => {
+    setOn(false);
+    if (val.trim() && val.trim() !== name) onChange(val.trim());
+    else setVal(name);
+  };
+  if (on) return (
+    <input className="bc-edit-input" value={val}
+      onChange={e => setVal(e.target.value)}
+      onBlur={commit}
+      onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') { setOn(false); setVal(name); } }}
+      autoFocus
+    />
+  );
+  return <span className="bc-curr" onClick={() => setOn(true)} title="Click to rename">{name}</span>;
+}
+
+// ─── App ───────────────────────────────────────────────────────────────────────
+function App() {
+  const [store, setStore]         = useState(() => loadStore());
+  const [path,  setPath]          = useState(['root']);
+  const [liveCount, setLiveCount] = useState(() => store.graphs['root']?.nodes?.length || 0);
+  const [canvasKey,    setCanvasKey]    = useState(0);
+  const [addOpen,      setAddOpen]      = useState(false);
+  const [addInitType,  setAddInitType]  = useState('concept');
+  const [editNode,     setEditNode]     = useState(null);
+  const [viewNode,     setViewNode]     = useState(null);
+  const [exportMd,     setExportMd]     = useState(null);
+  const [loadOpen,     setLoadOpen]     = useState(false);
+  const [clearConfirm, setClearConfirm] = useState(false);
+  const [saved,        setSaved]        = useState(false);
+  const flowRef = useRef(null);
+
+  const curId    = path[path.length - 1];
+  const curGraph = store.graphs[curId];
+
+  useEffect(() => {
+    const el = document.getElementById('boot');
+    if (el) { el.classList.add('hidden'); setTimeout(() => el.remove(), 350); }
+  }, []);
+
+  useEffect(() => {
+    if (!store.graphs[curId]) { setPath(['root']); setLiveCount(store.graphs['root']?.nodes?.length || 0); }
+  }, [curId, store.graphs]);
+
+  useEffect(() => {
+    const h = e => {
+      const mod = e.ctrlKey || e.metaKey;
+      if (mod && e.key === 's') { e.preventDefault(); doSave(); }
+      if (mod && e.key === 'n') { e.preventDefault(); openAdd('concept'); }
+      if (mod && e.key === 'g') { e.preventDefault(); openAdd('subgraph'); }
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  });
+
+  const openAdd = useCallback((type = 'concept') => {
+    setAddInitType(type);
+    setAddOpen(true);
+  }, []);
+
+  const capture = useCallback((base = store, id = curId) => {
+    if (!flowRef.current) return base;
+    const { nodes, edges } = flowRef.current.getState();
+    return { ...base, graphs: { ...base.graphs, [id]: { ...base.graphs[id], nodes, edges } } };
+  }, [store, curId]);
+
+  const doClear = useCallback(() => setClearConfirm(true), []);
+
+  const doConfirmClear = useCallback(() => {
+    const fresh = { graphs: { root: mkGraph('root', 'My Podcast', '') } };
+    setStore(fresh);
+    setPath(['root']);
+    setLiveCount(0);
+    setCanvasKey(k => k + 1);
+    persist(fresh);
+  }, []);
+
+  const doLoad = useCallback(data => {
+    setStore(data);
+    setPath(['root']);
+    setLiveCount(data.graphs['root']?.nodes?.length || 0);
+    setCanvasKey(k => k + 1);
+    persist(data);
+  }, []);
+
+  const doSave = useCallback(() => {
+    const ns = capture();
+    setStore(ns); persist(ns);
+    const name = (ns.graphs['root']?.name || 'axis-graph')
+      .trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const url = URL.createObjectURL(new Blob([JSON.stringify(ns, null, 2)], { type: 'application/json' }));
+    Object.assign(document.createElement('a'), { href: url, download: `${name}.json` }).click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setSaved(true); setTimeout(() => setSaved(false), 2500);
+  }, [capture]);
+
+  const goTo = useCallback(idx => {
+    const ns = capture();
+    setStore(ns);
+    setPath(p => {
+      const next = p.slice(0, idx + 1);
+      setLiveCount(ns.graphs[next[next.length - 1]]?.nodes?.length || 0);
+      return next;
+    });
+  }, [capture]);
+
+  const doExplore = useCallback(nodeId => {
+    const ns   = capture();
+    setStore(ns);
+    const node = flowRef.current?.getNode(nodeId) || ns.graphs[curId]?.nodes?.find(n => n.id === nodeId);
+    const gid  = node?.data?.graphId;
+    if (gid && ns.graphs[gid]) {
+      setPath(p => [...p, gid]);
+      setLiveCount(ns.graphs[gid]?.nodes?.length || 0);
+    }
+  }, [capture, curId]);
+
+  const doAdd = useCallback(({ type, label, description }) => {
+    const node = mkNode(type, label, description);
+    let s = store;
+    if (type === 'subgraph') {
+      const subId = uid();
+      node.data.graphId = subId;
+      s = { ...store, graphs: { ...store.graphs, [subId]: mkGraph(subId, label, description, curId) } };
+      setStore(s);
+    }
+    flowRef.current?.addNode(node);
+    setLiveCount(c => c + 1);
+    setAddOpen(false);
+  }, [store, curId]);
+
+  const doView = useCallback(nodeId => {
+    const n = flowRef.current?.getNode(nodeId) || curGraph?.nodes?.find(n => n.id === nodeId);
+    if (n) setViewNode(n);
+  }, [curGraph]);
+
+  const doEdit = useCallback(nodeId => {
+    const n = flowRef.current?.getNode(nodeId) || curGraph?.nodes?.find(n => n.id === nodeId);
+    if (n) setEditNode(n);
+  }, [curGraph]);
+
+  const doEditSave = useCallback((nodeId, patch) => {
+    flowRef.current?.updateNode(nodeId, patch);
+    if (editNode?.data?.graphId) {
+      setStore(prev => ({
+        ...prev,
+        graphs: {
+          ...prev.graphs,
+          [editNode.data.graphId]: { ...prev.graphs[editNode.data.graphId], name: patch.label, description: patch.description },
+        },
+      }));
+    }
+  }, [editNode]);
+
+  const doDel = useCallback(nodeId => {
+    const node = flowRef.current?.getNode(nodeId) || curGraph?.nodes?.find(n => n.id === nodeId);
+    flowRef.current?.removeNode(nodeId);
+    setLiveCount(c => Math.max(0, c - 1));
+    if (node?.data?.graphId) {
+      setStore(prev => {
+        const graphs = { ...prev.graphs };
+        const stack  = [node.data.graphId];
+        while (stack.length) {
+          const gid = stack.pop();
+          const g   = graphs[gid];
+          if (g) { (g.nodes || []).forEach(n => { if (n.data?.graphId) stack.push(n.data.graphId); }); delete graphs[gid]; }
+        }
+        return { ...prev, graphs };
+      });
+    }
+  }, [curGraph]);
+
+  const doRename = useCallback(name => {
+    setStore(prev => ({ ...prev, graphs: { ...prev.graphs, [curId]: { ...prev.graphs[curId], name } } }));
+  }, [curId]);
+
+  const doExport = useCallback(() => {
+    const ns = capture();
+    setStore(ns);
+    setExportMd(renderGraph(ns, 'root'));
+  }, [capture]);
+
+  const ncCtx = useMemo(() => ({
+    onView: doView, onEdit: doEdit, onDel: doDel, onExplore: doExplore,
+  }), [doView, doEdit, doDel, doExplore]);
+
+  const initData = useMemo(() => ({
+    nodes: curGraph?.nodes || [],
+    edges: curGraph?.edges || [],
+    // canvasKey forces remount on load / clear
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [curId, canvasKey]);
+
+  return (
+    <NCCtx.Provider value={ncCtx}>
+      <div className="app">
+        <header className="toolbar">
+          <div className="tb-left">
+            <div className="btn ghost brand">Axis Graph</div>
+            <nav className="breadcrumb">
+              {path.map((gid, i) => {
+                const g = store.graphs[gid];
+                const last = i === path.length - 1;
+                return (
+                  <React.Fragment key={gid}>
+                    {i > 0 && <span className="bc-div">›</span>}
+                    {last
+                      ? <BcEdit name={g?.name || '…'} onChange={doRename} />
+                      : <button className="bc-link" onClick={() => goTo(i)}>{g?.name || '…'}</button>
+                    }
+                  </React.Fragment>
+                );
+              })}
+            </nav>
+          </div>
+          <div className="tb-right">
+            <button className="btn ghost" onClick={() => openAdd('concept')} title="Add Node (Ctrl+N)">+ Add Node</button>
+            <button className="btn ghost" onClick={doExport}>Export</button>
+            <button className="btn ghost" onClick={doClear}>Clear</button>
+            <button className="btn ghost" onClick={() => setLoadOpen(true)}>Load</button>
+            <button className={`btn ${saved ? 'saved' : 'primary'}`} onClick={doSave}>
+              {saved ? '✓ Downloaded' : 'Download'}
+            </button>
+          </div>
+        </header>
+
+        <main className="canvas-wrap">
+          <FlowCanvas
+            key={`${curId}-${canvasKey}`}
+            ref={flowRef}
+            initNodes={initData.nodes}
+            initEdges={initData.edges}
+          />
+        </main>
+      </div>
+
+      {addOpen      && <AddModal     initType={addInitType} onAdd={doAdd} onClose={() => setAddOpen(false)} />}
+      {editNode     && <EditModal    node={editNode} onSave={doEditSave} onClose={() => setEditNode(null)} />}
+      {viewNode     && <ViewModal    node={viewNode}              onClose={() => setViewNode(null)} />}
+      {loadOpen     && <LoadModal    onLoad={doLoad}              onClose={() => setLoadOpen(false)} />}
+      {clearConfirm && <ConfirmModal onConfirm={doConfirmClear}   onClose={() => setClearConfirm(false)} />}
+      {exportMd !== null && <ExportModal markdown={exportMd} onClose={() => setExportMd(null)} />}
+    </NCCtx.Provider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
