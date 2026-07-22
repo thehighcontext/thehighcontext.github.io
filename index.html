@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AxisRaw — The Podcast</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Cormorant+Garamond:wght@300;400;500&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --black:    #0a0a0a;
+      --near-black: #111111;
+      --surface:  #141414;
+      --border:   #2a2a2a;
+      --muted:    #555555;
+      --silver:   #9a9a9a;
+      --white:    #e8e4dc;
+      --ivory:    #f0ece4;
+      --gold:     #c9a84c;
+      --gold-dim: #8c6e2f;
+      --red:      #8b1c1c;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-weight: 300;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ── GRAIN OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.35;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 4rem 2rem;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 40%, rgba(201,168,76,0.04) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(139,28,28,0.08) 0%, transparent 60%),
+        linear-gradient(180deg, #0a0a0a 0%, #111111 100%);
+      z-index: 0;
+    }
+
+    /* Decorative lines */
+    .hero-bg::before, .hero-bg::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--gold-dim);
+      opacity: 0.25;
+    }
+    .hero-bg::before {
+      top: 0; width: 1px; height: 120px;
+    }
+    .hero-bg::after {
+      bottom: 0; width: 1px; height: 120px;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+    }
+
+    .eyebrow {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.2s ease forwards;
+    }
+
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(5rem, 18vw, 14rem);
+      line-height: 0.9;
+      letter-spacing: 0.04em;
+      color: var(--ivory);
+      text-shadow: 0 0 120px rgba(201,168,76,0.12);
+      opacity: 0;
+      animation: fadeUp 0.9s 0.4s ease forwards;
+    }
+
+    .logo span {
+      color: var(--gold);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 2rem auto;
+      max-width: 320px;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.6s ease forwards;
+    }
+
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    }
+
+    .divider-diamond {
+      width: 6px; height: 6px;
+      background: var(--gold);
+      transform: rotate(45deg);
+    }
+
+    .tagline {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-style: italic;
+      font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+      font-weight: 400;
+      color: var(--silver);
+      letter-spacing: 0.02em;
+      max-width: 640px;
+      margin: 0 auto 3rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.8s ease forwards;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 0.8s 1s ease forwards;
+    }
+
+    .btn {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 0.85rem 2.2rem;
+      border: 1px solid;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: var(--black);
+    }
+    .btn-primary:hover {
+      background: transparent;
+      color: var(--gold);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--silver);
+    }
+    .btn-ghost:hover {
+      border-color: var(--gold-dim);
+      color: var(--white);
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 2.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeIn 1s 1.4s ease forwards;
+      z-index: 1;
+    }
+
+    .scroll-line {
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, var(--gold-dim), transparent);
+      animation: scrollPulse 2s 1.8s ease-in-out infinite;
+    }
+
+    /* ── ABOUT SECTION ── */
+    section {
+      position: relative;
+      padding: 6rem 2rem;
+    }
+
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+    }
+
+    .about {
+      background: var(--near-black);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .about-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 6rem;
+      align-items: start;
+    }
+
+    .about-heading {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 900;
+      line-height: 1.15;
+      color: var(--ivory);
+    }
+
+    .about-heading em {
+      display: block;
+      font-style: italic;
+      font-weight: 400;
+      color: var(--gold);
+    }
+
+    .about-text {
+      font-size: 1.15rem;
+      line-height: 1.9;
+      color: var(--silver);
+    }
+
+    .about-text strong {
+      color: var(--white);
+      font-weight: 500;
+    }
+
+    .about-text p + p {
+      margin-top: 1.5rem;
+    }
+
+    .about-stat-row {
+      display: flex;
+      gap: 3rem;
+      margin-top: 3rem;
+      padding-top: 2.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .stat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── LISTEN SECTION ── */
+    .listen {
+      background: var(--black);
+    }
+
+    .listen-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .listen-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      font-weight: 700;
+      color: var(--ivory);
+    }
+
+    .platform-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .platform-card {
+      background: var(--surface);
+      padding: 2.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.3s, transform 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .platform-card::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 100%; height: 2px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.35s ease;
+    }
+
+    .platform-card:hover {
+      background: #1a1a1a;
+    }
+
+    .platform-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .platform-icon {
+      font-size: 2rem;
+      line-height: 1;
+    }
+
+    .platform-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.08em;
+      color: var(--ivory);
+    }
+
+    .platform-handle {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--gold);
+      letter-spacing: 0.1em;
+    }
+
+    .platform-desc {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .platform-arrow {
+      margin-top: auto;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+      transition: color 0.3s, gap 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .platform-card:hover .platform-arrow {
+      color: var(--gold);
+    }
+
+    /* ── TOPICS ── */
+    .topics {
+      background: var(--near-black);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topics-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .topics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    .topic-item {
+      border-left: 1px solid var(--gold-dim);
+      padding-left: 1.2rem;
+    }
+
+    .topic-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem;
+      color: var(--border);
+      line-height: 1;
+      margin-bottom: 0.3rem;
+    }
+
+    .topic-name {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 0.4rem;
+    }
+
+    .topic-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── SHORTS ── */
+    .shorts {
+      background: var(--black);
+    }
+
+    .shorts-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .shorts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      margin-top: 3rem;
+      border: 1px solid var(--border);
+    }
+
+    .short-card {
+      background: var(--surface);
+      padding: 3rem 2.5rem;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      transition: background 0.3s;
+      position: relative;
+    }
+
+    .short-card:hover { background: #1a1a1a; }
+
+    .short-platform {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .short-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--ivory);
+      line-height: 1.2;
+    }
+
+    .short-handle {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    .short-desc {
+      font-size: 0.9rem;
+      color: var(--silver);
+      line-height: 1.7;
+      max-width: 380px;
+    }
+
+    .short-link {
+      margin-top: auto;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: color 0.3s;
+    }
+
+    .short-card:hover .short-link { color: var(--gold); }
+
+    /* ── QUOTE ── */
+    .quote-section {
+      background: var(--near-black);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+      padding: 7rem 2rem;
+    }
+
+    blockquote {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .quote-mark {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 6rem;
+      color: var(--gold-dim);
+      line-height: 0.5;
+      margin-bottom: 1.5rem;
+      opacity: 0.5;
+    }
+
+    blockquote p {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.3rem, 2.5vw, 1.9rem);
+      font-style: italic;
+      font-weight: 400;
+      color: var(--white);
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+
+    .quote-source {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--black);
+      border-top: 1px solid var(--border);
+      padding: 4rem 2rem;
+    }
+
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 3rem;
+    }
+
+    .footer-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem;
+      letter-spacing: 0.08em;
+      color: var(--ivory);
+    }
+
+    .footer-logo span { color: var(--gold); }
+
+    .footer-tagline {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .footer-link {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .footer-link:hover { color: var(--gold); }
+
+    .footer-bottom {
+      max-width: 1100px;
+      margin: 2.5rem auto 0;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .footer-copy {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.5rem 2.5rem;
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(42,42,42,0.5);
+    }
+
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      letter-spacing: 0.08em;
+      color: var(--ivory);
+      text-decoration: none;
+    }
+
+    .nav-logo span { color: var(--gold); }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover { color: var(--gold); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    @keyframes scrollPulse {
+      0%, 100% { opacity: 0.4; transform: scaleY(1); }
+      50%       { opacity: 1;   transform: scaleY(0.6); }
+    }
+
+    /* Intersection Observer fade-ins */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .about-inner { grid-template-columns: 1fr; gap: 2.5rem; }
+      .about-stat-row { gap: 2rem; flex-wrap: wrap; }
+      .shorts-grid { grid-template-columns: 1fr; }
+      .footer-inner { grid-template-columns: 1fr; }
+      .footer-links { justify-content: flex-start; }
+      nav { padding: 1.2rem 1.5rem; }
+      .nav-links { gap: 1.2rem; }
+    }
+
+    @media (max-width: 500px) {
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-logo">Axis<span>Raw</span></a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#listen">Listen</a></li>
+      <li><a href="#shorts">Shorts</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="home">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <p class="eyebrow">The Podcast · Since 2024</p>
+      <h1 class="logo">Axis<span>Raw</span></h1>
+      <div class="divider">
+        <div class="divider-line"></div>
+        <div class="divider-diamond"></div>
+        <div class="divider-line"></div>
+      </div>
+      <p class="tagline">Where men go to think — not to be told what to think.</p>
+      <div class="hero-cta">
+        <a href="https://youtube.com/@axisraw" class="btn btn-primary" target="_blank" rel="noopener">Watch on YouTube</a>
+        <a href="#about" class="btn btn-ghost">Discover More</a>
+      </div>
+    </div>
+    <div class="scroll-hint">
+      <div class="scroll-line"></div>
+      <span>Scroll</span>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="about" id="about">
+    <div class="about-inner">
+      <div class="reveal">
+        <p class="section-label">The Premise</p>
+        <h2 class="about-heading">
+          The Examined<br/>
+          <em>Life of Man</em>
+        </h2>
+      </div>
+      <div class="reveal">
+        <div class="about-text">
+          <p>
+            <strong>AxisRaw</strong> is a long-form conversation series dedicated to the architecture of masculinity — not the caricature, not the stereotype, but the <strong>genuine, difficult, irreducible core</strong> of what it means to be a man in the modern world.
+          </p>
+          <p>
+            Each episode draws from mythology, philosophy, psychology, and lived experience to excavate the questions that men carry but rarely speak aloud. We explore <strong>responsibility, identity, suffering, purpose, and the sacred duty of self-mastery</strong> — with the rigour of a scholar and the honesty of someone who has been in the dark.
+          </p>
+          <p>
+            This is not entertainment. This is <strong>intellectual and spiritual nourishment</strong> for men who refuse easy answers — who understand that the examined life is the only life worth living, and who are willing to face themselves with courage.
+          </p>
+        </div>
+        <div class="about-stat-row">
+          <div class="stat">
+            <span class="stat-num">∞</span>
+            <span class="stat-label">Depth</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">0</span>
+            <span class="stat-label">Filters</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">1</span>
+            <span class="stat-label">Standard</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LISTEN -->
+  <section class="listen" id="listen">
+    <div class="listen-inner">
+      <div class="listen-top reveal">
+        <div>
+          <p class="section-label">Find Us On</p>
+          <h2 class="section-title">Where to Listen & Watch</h2>
+        </div>
+        <a href="https://open.spotify.com/show/axisraw" class="btn btn-ghost" target="_blank" rel="noopener">All Platforms →</a>
+      </div>
+      <div class="platform-grid reveal">
+
+        <a href="https://youtube.com/@axisraw" class="platform-card" target="_blank" rel="noopener">
+          <div class="platform-icon">▶</div>
+          <div class="platform-name">YouTube</div>
+          <div class="platform-handle">@axisraw</div>
+          <p class="platform-desc">Full video episodes, clips, and deep-dive conversations. Subscribe and watch every episode in full.</p>
+          <div class="platform-arrow">Open YouTube <span>→</span></div>
+        </a>
+
+        <a href="https://rumble.com/c/axisraw" class="platform-card" target="_blank" rel="noopener">
+          <div class="platform-icon">🔴</div>
+          <div class="platform-name">Rumble</div>
+          <div class="platform-handle">axisraw</div>
+          <p class="platform-desc">Uncensored. Uncompromising. All episodes available on Rumble for those who value a free, open platform.</p>
+          <div class="platform-arrow">Open Rumble <span>→</span></div>
+        </a>
+
+        <a href="https://open.spotify.com/show/axisraw" class="platform-card" target="_blank" rel="noopener">
+          <div class="platform-icon">🎙</div>
+          <div class="platform-name">Spotify</div>
+          <div class="platform-handle">AxisRaw Podcast</div>
+          <p class="platform-desc">Full-length episodes. Uncut, unfiltered long-form conversations on masculinity, philosophy, and the examined life.</p>
+          <div class="platform-arrow">Open Spotify <span>→</span></div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SHORTS -->
+  <section class="shorts" id="shorts">
+    <div class="shorts-inner">
+      <div class="reveal">
+        <p class="section-label">Short Form</p>
+        <h2 class="section-title">Daily Sparks</h2>
+        <p style="color:var(--muted);font-size:0.95rem;margin-top:0.75rem;max-width:520px;">
+          Concentrated truths. Extracted moments from the full episodes — cut for impact, built for the scroll.
+        </p>
+      </div>
+      <div class="shorts-grid reveal">
+
+        <a href="https://instagram.com/axisraw.official" class="short-card" target="_blank" rel="noopener">
+          <div class="short-platform">Instagram</div>
+          <div class="short-title">Reels & Short Clips</div>
+          <div class="short-handle">@axisraw.official</div>
+          <p class="short-desc">High-intensity clips, visual quotes, and short-form wisdom for the man who wants truth in two minutes or less.</p>
+          <span class="short-link">Follow on Instagram →</span>
+        </a>
+
+        <a href="https://tiktok.com/@axisraw.official" class="short-card" target="_blank" rel="noopener">
+          <div class="short-platform">TikTok</div>
+          <div class="short-title">Moments That Hit</div>
+          <div class="short-handle">@axisraw.official</div>
+          <p class="short-desc">Pulled from the archives of long conversations — the moments where something shifts. Watch. Think. Share.</p>
+          <span class="short-link">Follow on TikTok →</span>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- QUOTE -->
+  <div class="quote-section">
+    <blockquote class="reveal">
+      <div class="quote-mark">"</div>
+      <p>Every man is called to something. The tragedy is not failing to answer — it is never hearing the call because no one taught him to listen.</p>
+      <div class="quote-source">— AxisRaw</div>
+    </blockquote>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div>
+        <div class="footer-logo">Axis<span>Raw</span></div>
+        <p class="footer-tagline">The Podcast for Men Who Think</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://youtube.com/@axisraw" class="footer-link" target="_blank" rel="noopener">YouTube</a>
+        <a href="https://rumble.com/c/axisraw" class="footer-link" target="_blank" rel="noopener">Rumble</a>
+        <a href="https://open.spotify.com/show/axisraw" class="footer-link" target="_blank" rel="noopener">Spotify</a>
+        <a href="https://instagram.com/axisraw.official" class="footer-link" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://tiktok.com/@axisraw.official" class="footer-link" target="_blank" rel="noopener">TikTok</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© 2024 AxisRaw. All rights reserved.</span>
+      <span class="footer-copy">Forged for those who refuse to look away.</span>
+    </div>
+  </footer>
+
+  <script>
+    // Intersection Observer for scroll reveals
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    reveals.forEach(el => observer.observe(el));
+
+    // Smooth active nav state
+    const sections = document.querySelectorAll('section[id], footer');
+    const navLinks = document.querySelectorAll('.nav-links a');
+
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(s => {
+        if (window.scrollY >= s.offsetTop - 120) current = s.id;
+      });
+      navLinks.forEach(a => {
+        a.style.color = a.getAttribute('href') === '#' + current ? 'var(--gold)' : '';
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,2 +1,0 @@
-# thehighcontext.github.io
-TheHighContext
