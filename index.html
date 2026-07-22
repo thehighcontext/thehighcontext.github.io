@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>TheHighContext | Holding men to higher standards.</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <style>
         /* Minimalist Dark Theme Reset & Global Styles */
         * {
@@ -59,7 +62,10 @@
         }
 
         .link-btn {
-            display: block;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
             padding: 0.9rem 1.5rem;
             background-color: #000;
             color: #ffffff;
@@ -68,6 +74,10 @@
             font-weight: 500;
             font-size: 0.95rem;
             transition: all 0.2s ease;
+        }
+
+        .link-btn i {
+            font-size: 1.1rem;
         }
 
         .link-btn:hover {
@@ -103,11 +113,21 @@
         </header>
 
         <nav class="links">
-            <a href="https://youtube.com/@TheHighContext" class="link-btn" target="_blank" rel="noopener noreferrer">YouTube</a>
-            <a href="https://substack.com/@TheHighContext" class="link-btn" target="_blank" rel="noopener noreferrer">Substack</a>
-            <a href="https://x.com/TheHighContext" class="link-btn" target="_blank" rel="noopener noreferrer">X (Twitter)</a>
-            <a href="https://instagram.com/TheHighContext" class="link-btn" target="_blank" rel="noopener noreferrer">Instagram</a>
-            <a href="https://tiktok.com/@TheHighContext" class="link-btn" target="_blank" rel="noopener noreferrer">TikTok</a>
+            <a href="https://youtube.com/@TheHighContext" class="link-btn" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-youtube"></i> YouTube
+            </a>
+            <a href="https://substack.com/@TheHighContext" class="link-btn" target="_blank" rel="noopener noreferrer">
+                <i class="fa-solid fa-bookmark"></i> Substack
+            </a>
+            <a href="https://x.com/TheHighContext" class="link-btn" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-x-twitter"></i> X (Twitter)
+            </a>
+            <a href="https://instagram.com/TheHighContext" class="link-btn" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-instagram"></i> Instagram
+            </a>
+            <a href="https://tiktok.com/@TheHighContext" class="link-btn" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-tiktok"></i> TikTok
+            </a>
         </nav>
     </main>
 
